@@ -1,40 +1,50 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-function useGeolocation() {}
-
-export default function App() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [countClicks, setCountClicks] = useState(0);
+function useGeolocation() {
   const [position, setPosition] = useState({});
-  const [error, setError] = useState(null);
-
-  const { lat, lng } = position;
+  const [error, setError] = useState<null | string>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   function getPosition() {
-    setCountClicks((count) => count + 1);
-
     if (!navigator.geolocation)
-      return setError("Your browser does not support geolocation");
+      return setError('Your browser does not support geolocation');
 
     setIsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      pos => {
         setPosition({
           lat: pos.coords.latitude,
-          lng: pos.coords.longitude
+          lng: pos.coords.longitude,
         });
         setIsLoading(false);
       },
-      (error) => {
+      error => {
         setError(error.message);
         setIsLoading(false);
       }
     );
   }
 
+  return { position, error, isLoading, getPosition };
+}
+
+export default function App() {
+  const [countClicks, setCountClicks] = useState(0);
+  const {
+    position: { lat, lng },
+    error,
+    isLoading,
+    getPosition,
+  } = useGeolocation();
+
+  function handleClick() {
+    setCountClicks(count => count + 1);
+    getPosition();
+  }
+
   return (
     <div>
-      <button onClick={getPosition} disabled={isLoading}>
+      <button onClick={handleClick} disabled={isLoading}>
         Get my position
       </button>
 
@@ -42,7 +52,7 @@ export default function App() {
       {error && <p>{error}</p>}
       {!isLoading && !error && lat && lng && (
         <p>
-          Your GPS position:{" "}
+          Your GPS position:{' '}
           <a
             target="_blank"
             rel="noreferrer"
